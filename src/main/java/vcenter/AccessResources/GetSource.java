@@ -13,7 +13,7 @@ public class GetSource {
     private final ServiceConnection serviceConnection;
     private static final AtomicReference<GetSource> instance = new AtomicReference<>();
 
-    private GetSource(ServiceConnection serviceConnection) {
+    GetSource(ServiceConnection serviceConnection) {
         this.serviceConnection = serviceConnection;
     }
 

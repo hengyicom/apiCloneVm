@@ -1,9 +1,14 @@
 package vcenter.AccessResources;
 
 import com.vmware.vim25.*;
+import vcenter.ObjectSpecBuilder;
+import vcenter.PropertyFilterSpecBuilder;
+import vcenter.PropertySpecBuilder;
 import vcenter.ServiceConnection;
 
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModifyMemory {
     private final ServiceConnection serviceConnection;
@@ -57,27 +62,59 @@ public class ModifyMemory {
         }
     }
 
-//    public void addDisk(String vmName){
-//        VirtualDisk disk = new VirtualDisk();
-//        disk.setCapacityInKB(10485760); // 设置磁盘大小为 10 GB（单位：KB）
-//        disk.setUnitNumber(1); // 设置磁盘单元号
-//        disk.setControllerKey(1000); // 设置控制器键值（通常为 1000）
-//
-//        // 设置磁盘后端
-//        VirtualDiskFlatVer2BackingInfo backingInfo = new VirtualDiskFlatVer2BackingInfo();
-//        backingInfo.setFileName("[datastore1] " + vmName + "/newDisk.vmdk"); // 设置磁盘文件路径
-//        backingInfo.setDiskMode("persistent"); // 设置磁盘模式
-//        disk.setBacking(backingInfo);
-//
-//        // 创建设备配置规范
-//        VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
-//        diskSpec.setFileOperation(VirtualDeviceConfigSpecFileOperation.CREATE);
-//        diskSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD); // 添加磁盘
-//        diskSpec.setDevice(disk);
-//
-//        // 创建虚拟机配置规范
-//        VirtualMachineConfigSpec configSpec = new VirtualMachineConfigSpec();
-//        configSpec.getDeviceChange().add(diskSpec);
-//        serviceConnection.getService().reconfigVMTask(vmName,configSpec);
-//    }
+    /**
+     * 创建磁盘
+     * @param vmName 虚机名称
+     * @param dataStoreName  存储位置
+     * @param diskSizeMB 磁盘大小
+     * @param diskNumber 磁盘数量
+     * @param prefixFileName 磁盘名称
+     * @return 是否成功
+     */
+
+    public boolean createDisk(String vmName, String dataStoreName, long diskSizeMB, int diskNumber, String prefixFileName) {
+        ArrayList<VirtualDeviceConfigSpec> vdiskSpecs = new ArrayList<VirtualDeviceConfigSpec>();
+        VirtualMachineConfigSpec vmConfigSpec = new VirtualMachineConfigSpec();
+        GetSource getSource = new GetSource(serviceConnection);
+        try {
+            ManagedObjectReference vmRef = getVmByName(vmName);
+            List<VirtualDisk> disks = ((ArrayOfVirtualDevice) getSource.entityProps(vmRef, new String[] { "config.hardware.device" })
+                    .get("config.hardware.device")).getVirtualDevice().stream().filter(d -> d instanceof VirtualDisk)
+                    .map(d -> (VirtualDisk) d).collect(Collectors.toList());
+            for(int i = 0; i < diskNumber; i++) {
+                Thread.sleep(100);
+                VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
+                diskSpec.setFileOperation(VirtualDeviceConfigSpecFileOperation.CREATE);
+                diskSpec.setOperation(VirtualDeviceConfigSpecOperation.ADD);
+                VirtualDisk newDisk = new VirtualDisk();
+                VirtualDiskFlatVer2BackingInfo diskfileBacking = new VirtualDiskFlatVer2BackingInfo();
+                String diskFileName = getVolumeName(dataStoreName) + " " + vmName + "/" + (prefixFileName.isEmpty() ? "dataDisk" : prefixFileName) +
+                        new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date()) + ".vmdk";
+                diskfileBacking.setFileName(diskFileName);
+                diskfileBacking.setDiskMode("persistent");
+                diskfileBacking.setEagerlyScrub(false);
+                diskfileBacking.setThinProvisioned(true);  //精简置备
+                newDisk.setKey(disks.get(disks.size()-1).getKey() + i + 1);
+                newDisk.setControllerKey(disks.get(0).getControllerKey());
+                newDisk.setUnitNumber(new Integer(disks.get(disks.size()-1).getUnitNumber().intValue() + i + 1));
+                newDisk.setBacking(diskfileBacking);
+                newDisk.setCapacityInKB(diskSizeMB * 1024);
+                diskSpec.setDevice(newDisk);
+                vdiskSpecs.add(diskSpec);
+            }
+            vmConfigSpec.getDeviceChange().addAll(vdiskSpecs);
+            reConfig(vmRef, vmConfigSpec);
+            return true;
+        } catch(Exception ex) {
+            System.out.print(ex);
+        }
+        return false;
+    }
+    String getVolumeName(String volName) {
+        String volumeName = null;
+        volumeName = volName != null && volName.length() > 0 ? "[" + volName + "]" : "[Local]";
+        return volumeName;
+    }
+
+
 }
