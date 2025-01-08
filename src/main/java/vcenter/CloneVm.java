@@ -3,6 +3,7 @@ package vcenter;
 import com.vmware.vim25.*;
 import entity.VcenterEntity;
 import vcenter.AccessResources.GetSource;
+import vcenter.AccessResources.WaitCloneVm;
 
 import java.util.Map;
 
@@ -25,7 +26,9 @@ public class CloneVm {
         String crPathName = String.valueOf(dataCenterName) + "/host/" + dataCenterHost;
         String hostPathName = crPathName + "/" + dataCenterHost;
         String poolPathName = String.valueOf(crPathName) + "/Resources";
+        //获取vcenter的资源池
         ManagedObjectReference poolRef = serviceConnection.getService().findByInventoryPath(serviceConnection.getServiceContent().getSearchIndex(), poolPathName);
+        //获取vcenter中的符合条件的虚机
         Map<String, ManagedObjectReference> vmMap = getSources.inContainerByType(serviceConnection.getServiceContent().getRootFolder(), "VirtualMachine");
         String sourceName = "dtt_nve_suse_11sp4_x86_64";
         ManagedObjectReference vmRef = null;
@@ -49,7 +52,12 @@ public class CloneVm {
         cloneSpec.setTemplate(false); // 克隆虚拟机为普通虚拟机，而不是模板
         ManagedObjectReference targetFolder = serviceConnection.getService().findByInventoryPath(serviceConnection.getServiceContent().getSearchIndex(), String.valueOf(dataCenterName) + "/vm");
         ManagedObjectReference cloneTask = serviceConnection.getService().cloneVMTask(vmRef, targetFolder, "cloneVmName", cloneSpec);
-
-        cloneTask.wait(60);
+        WaitCloneVm waitCloneVm = new WaitCloneVm(serviceConnection);
+        if (!waitCloneVm.getTaskResultAfterDone(cloneTask)) {
+            String msg = "Failure: Creating [ " + sourceName + "] VM";
+            throw new RuntimeException(msg);
+        }else {
+            System.out.print("clone 成功");
+        }
     }
 }

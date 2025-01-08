@@ -119,10 +119,12 @@ public class GetSource {
 
     public Map<String, Object> entityProps(ManagedObjectReference entityMor, String[] props) throws InvalidPropertyFaultMsg, RuntimeFaultFaultMsg {
         Map<String, Object> result = new HashMap<>();
+        //构建属性过滤规范
         PropertyFilterSpec[] propertyFilterSpecs = new PropertyFilterSpec[]{
                 new PropertyFilterSpecBuilder().propSet(new PropertySpecBuilder().all(false).type(entityMor.getType()).pathSet(props))
                         .objectSet(new ObjectSpecBuilder().obj(entityMor))
         };
+        //调用远程服务获取属性信息
         List<ObjectContent> objectContents = serviceConnection.getService().retrievePropertiesEx(
                 serviceConnection.getServiceContent().getPropertyCollector(),
                 Arrays.asList(propertyFilterSpecs),
