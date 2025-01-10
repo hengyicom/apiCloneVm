@@ -85,7 +85,7 @@ public class LocalVcenterOperator implements VcenterOperator {
             try {
                 connection.disconnect();
             } catch (Throwable e) {
-                log.println("failed to disconnection ", e);
+                log.println();
             }
             connection = null;
         }
