@@ -25,7 +25,7 @@ public class ModifyMemory {
    public void reconfigDeviceSetting(ManagedObjectReference vmMor) throws Exception{
         VirtualMachineConfigSpec vmConfigSpec = new VirtualMachineConfigSpec();
         int memorySize = Integer.parseInt("4");
-        vmConfigSpec.setMemoryMB(new Long(1024 * memorySize));
+        vmConfigSpec.setMemoryMB((long) (1024 * memorySize));
         vmConfigSpec.setNumCPUs(Integer.parseInt("4"));
         vmConfigSpec.setNumCoresPerSocket(Integer.parseInt("4"));
         reConfig(vmMor,vmConfigSpec);
@@ -96,7 +96,7 @@ public class ModifyMemory {
                 diskfileBacking.setThinProvisioned(true);  //精简置备
                 newDisk.setKey(disks.get(disks.size()-1).getKey() + i + 1);
                 newDisk.setControllerKey(disks.get(0).getControllerKey());
-                newDisk.setUnitNumber(new Integer(disks.get(disks.size()-1).getUnitNumber().intValue() + i + 1));
+                newDisk.setUnitNumber(disks.get(disks.size() - 1).getUnitNumber() + i + 1);
                 newDisk.setBacking(diskfileBacking);
                 newDisk.setCapacityInKB(diskSizeMB * 1024);
                 diskSpec.setDevice(newDisk);

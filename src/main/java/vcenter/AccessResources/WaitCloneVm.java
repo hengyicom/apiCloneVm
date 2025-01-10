@@ -17,7 +17,7 @@ public class WaitCloneVm {
     public boolean getTaskResultAfterDone(ManagedObjectReference task) throws InvalidPropertyFaultMsg, RuntimeFaultFaultMsg, InvalidCollectorVersionFaultMsg {
         boolean retVal = false;
         Object[] result = wait(task, new String[]{"info.state", "info.error"}, new String[]{"state"}, new Object[][]{{TaskInfoState.SUCCESS, TaskInfoState.ERROR}});
-        if (result[0].equals((Object)TaskInfoState.SUCCESS)) {
+        if (result[0].equals(TaskInfoState.SUCCESS)) {
             retVal = true;
         }
         if (result[1] instanceof LocalizedMethodFault) {

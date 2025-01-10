@@ -8,10 +8,8 @@ import javax.xml.soap.SOAPMessage;
 import javax.xml.ws.BindingProvider;
 
 public class NamespaceSContext implements NamespaceContext {
-    private QName xsdQName;
 
     public NamespaceSContext(QName xsdQName) {
-        this.xsdQName = xsdQName;
     }
 
     @Override

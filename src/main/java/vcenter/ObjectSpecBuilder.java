@@ -11,7 +11,7 @@ public class ObjectSpecBuilder
         extends ObjectSpec {
     private void init() {
         if (this.selectSet == null) {
-            this.selectSet = new ArrayList();
+            this.selectSet = new ArrayList<>();
         }
     }
 

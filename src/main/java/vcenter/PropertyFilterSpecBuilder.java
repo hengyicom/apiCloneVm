@@ -11,10 +11,10 @@ public class PropertyFilterSpecBuilder
         extends PropertyFilterSpec {
     private void init() {
         if (this.propSet == null) {
-            this.propSet = new ArrayList();
+            this.propSet = new ArrayList<>();
         }
         if (this.objectSet == null) {
-            this.objectSet = new ArrayList();
+            this.objectSet = new ArrayList<>();
         }
     }
 
