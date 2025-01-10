@@ -98,7 +98,7 @@ public class ModifyMemory {
                 newDisk.setControllerKey(disks.get(0).getControllerKey());
                 newDisk.setUnitNumber(disks.get(disks.size() - 1).getUnitNumber() + i + 1);
                 newDisk.setBacking(diskfileBacking);
-                newDisk.setCapacityInKB(diskSizeMB * 1024);
+                newDisk.setCapacityInKB(diskSizeMB * 1024 * 1024);
                 diskSpec.setDevice(newDisk);
                 vdiskSpecs.add(diskSpec);
             }

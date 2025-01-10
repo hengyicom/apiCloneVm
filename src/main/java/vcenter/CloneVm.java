@@ -3,6 +3,8 @@ package vcenter;
 import com.vmware.vim25.*;
 import entity.VcenterEntity;
 import vcenter.AccessResources.GetSource;
+import vcenter.AccessResources.ModifyMemory;
+import vcenter.AccessResources.ModifyNetworkConfig;
 import vcenter.AccessResources.WaitCloneVm;
 
 import java.util.Map;
@@ -50,6 +52,7 @@ public class CloneVm {
         cloneSpec.setLocation(relocateSpec);
         cloneSpec.setPowerOn(false); // 克隆时不启动虚拟机
         cloneSpec.setTemplate(false); // 克隆虚拟机为普通虚拟机，而不是模板
+        cloneSpec.setCustomization(new ModifyNetworkConfig().createCustomizationSpec("cloneVmName", "10.1.132.99"));
         ManagedObjectReference targetFolder = serviceConnection.getService().findByInventoryPath(serviceConnection.getServiceContent().getSearchIndex(), String.valueOf(dataCenterName) + "/vm");
         ManagedObjectReference cloneTask = serviceConnection.getService().cloneVMTask(vmRef, targetFolder, "cloneVmName", cloneSpec);
         WaitCloneVm waitCloneVm = new WaitCloneVm(serviceConnection);
@@ -57,7 +60,17 @@ public class CloneVm {
             String msg = "Failure: Creating [ " + sourceName + "] VM";
             throw new RuntimeException(msg);
         }else {
-            System.out.print("clone 成功");
+            // 修改虚拟机内存配置
+            ModifyMemory modifyMemory = new ModifyMemory(serviceConnection);
+            ManagedObjectReference  vmMor = modifyMemory.getVmByName("cloneVmName");
+            if (vmMor == null) {
+                throw new RuntimeException("Cloned VM not found: cloneVmName");
+            }
+            modifyMemory.reconfigDeviceSetting(vmMor);
+            modifyMemory.createDisk("cloneVmName","HDD-DATA1",30,2,"data");
+            //打开虚机
+            ManagedObjectReference taskRef = serviceConnection.getService().powerOnVMTask(vmMor, null);
+            waitCloneVm.getTaskResultAfterDone(taskRef);
         }
     }
 }
