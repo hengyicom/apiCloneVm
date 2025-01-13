@@ -47,7 +47,7 @@ public class ModifyNetworkConfig {
     private void configureNetworkAdapter(CustomizationSpec spec, String vmIp) {
         CustomizationIPSettings ipSetting = new CustomizationIPSettings();
         ipSetting.getGateway().add("10.1.0.1");
-        ipSetting.setSubnetMask("255.255.240.0");
+        ipSetting.setSubnetMask("255.255.0.0");
 
         CustomizationFixedIp ip = new CustomizationFixedIp();
         ip.setIpAddress(vmIp);
